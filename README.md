@@ -73,7 +73,7 @@ params.page = 0;
 params.per_page = 5;
 input.params = params;
 
-crmclient.API.MODULES.get(input).then(function(response){
+ZCRMRestClient.API.MODULES.get(input).then(function(response){
 
     var result = "<html><body><b> Top 5 Leads</b>";
     var data = response.body;
