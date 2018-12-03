@@ -80,6 +80,12 @@ api.tokenmanagement is given as a measure to manage and maintain tokens. If to
 username and password can be given here if you already have one created for your MySQL.
 The above keys specified in configuration.properties file are all optional.
 
+user_identifier can be set in two ways .
+1.Mentioning it in api.user_identifier in configuration.properties file 
+2.Can be set via code using set setUserIdentifier.
+
+If user_identifier is not set via both the ways then default value 'zcrm_default_user' will be set by the sdk itself . 
+
 
 ##Token Storage Mechanism
 
