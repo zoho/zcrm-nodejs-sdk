@@ -3,6 +3,10 @@
   "version": "0.0.14",
   "description": "Node SDK for Zoho CRM",
   "main": "lib/js/ZCRMRestClient",
+  "scripts": {
+    "lint": "eslint . --fix",
+    "test-local": "node local-testing/app.js"
+  },
   "dependencies": {
     "fs": "0.0.1-security",
     "mysql": "^2.15.0",
@@ -17,5 +21,9 @@
     "OAuth2",
     "API"
   ],
-  "author": "Zoho CRM API Team (support@zohocrm.com)"
+  "author": "Zoho CRM API Team (support@zohocrm.com)",
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-google": "^0.12.0"
+  }
 }

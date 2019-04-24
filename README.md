@@ -32,7 +32,7 @@ Node JS SDK will be installed and a package named 'zcrmsdk' will be created in t
 
 Once installed it can be used in the code as below,
 
->var ZCRMRestClient = require('zcrmsdk')
+>let ZCRMRestClient = require('zcrmsdk')
 
 ##API Usage
 
@@ -134,7 +134,7 @@ Each time server is restarted, this function has to be called and both the confi
 Below snippet has to be called before starting the app
 
 ```
-var ZCRMRestClient = require('zcrmsdk');
+let ZCRMRestClient = require('zcrmsdk');
 
 ZCRMRestClient.initialize().then(function(){
 
@@ -176,24 +176,24 @@ ZCRMRestClient.generateAuthTokenfromRefreshToken(user_identifier,refresh_token).
 ##Sample API Calls 
 
 ```
-var input ={};
+let input ={};
 input.module = "Leads";
 
-var params = {};
+let params = {};
 params.page = 0;
 params.per_page = 5;
 input.params = params;
 
 crmclient.API.MODULES.get(input).then(function(response){
 
-    var result = "<html><body><b> Top 5 Leads</b>";
-    var data = response.body;
+    let result = "<html><body><b> Top 5 Leads</b>";
+    let data = response.body;
     data = JSON.parse(data);
     data = data.data;
     for (i in data){
 
-        var record = data[i];
-        var name = record.Full_Name;
+        let record = data[i];
+        let name = record.Full_Name;
         
         result+="<br><span>"+name+"</span>";
 
