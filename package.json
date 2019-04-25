@@ -4,6 +4,7 @@
   "description": "Node SDK for Zoho CRM",
   "main": "lib/js/ZCRMRestClient",
   "scripts": {
+    "test":"mocha",
     "lint": "eslint . --fix",
     "test-local": "node local-testing/app.js"
   },
@@ -24,6 +25,7 @@
   "author": "Zoho CRM API Team (support@zohocrm.com)",
   "devDependencies": {
     "eslint": "^5.16.0",
-    "eslint-config-google": "^0.12.0"
+    "eslint-config-google": "^0.12.0",
+    "mocha": "^6.1.4"
   }
 }

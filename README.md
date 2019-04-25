@@ -33,15 +33,13 @@ Once installed it can be used in the code as below,
 
 > let ZCRMRestClient = require('zcrmsdk')
 
-## API Usage
+# API Usage
 
 ## Configurations
 
 Your OAuth Client details should be given to the SDK as a property file. In the SDK, you need to configure a file named oauth_configuration.properties. Please place the respective values in that file. You can place it under resources/ package from where the SDK is used.
 
-
-zcrmsdk will try reading file from **'resources/oauth_configuration.properties'** 
-
+zcrmsdk will try reading file from **'resources/oauth_configuration.properties'**
 
 Please fill the values for the following keys alone.
 Based on your domain(EU,CN), please change the value of crm.iamurl. Default value set as US domain.
@@ -84,6 +82,7 @@ user_identifier can be set in two ways .
 
 If user_identifier is not set via both the ways then default value 'zcrm_default_user' will be set by the sdk itself . 
 
+Example files can be found in the [resources](./resources) project directory
 
 ## Token Storage Mechanism
 
