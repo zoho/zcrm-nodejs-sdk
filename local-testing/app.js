@@ -21,17 +21,16 @@ const zoho = require(path.join(__dirname, '..', packageJson.main));
       data: [
         {
           Subject: 'API Test SO',
-          Account_Name: 'Pyramid Model Consortium',
+          Account_Name: 'Account',
           Product_Details: [
             {
               product: {
-                id: '1717725000005607107'
+                id: 'id-number'
               },
               quantity: 1
             }
           ],
-          Status: 'Delivered',
-          Due_Date: '2019-04-25'
+          Status: 'Delivered'
         }
       ]
     }
