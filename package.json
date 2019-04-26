@@ -1,10 +1,10 @@
 {
   "name": "zcrmsdk",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "description": "Node SDK for Zoho CRM",
   "main": "lib/js/ZCRMRestClient",
   "scripts": {
-    "test":"mocha",
+    "test": "mocha",
     "lint": "eslint . --fix",
     "test-local": "node local-testing/app.js"
   },
