@@ -1,6 +1,8 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 
 // Custom Modules
 const ZCRMRestClient = require('../lib/js/ZCRMRestClient.js');
@@ -12,13 +14,41 @@ const org = require('../lib/js/org.js');
 const attachments = require('../lib/js/attachments.js');
 const functions = require('../lib/js/functions.js');
 
-// Get example properties
-const PropertiesReader = require('properties-reader');
-const config = PropertiesReader('resources/oauth_configuration.properties');
-config.append('resources/configuration.properties');
+const legacyConfiguration = `
+[crm]
+api.url=
+api.user_identifier=
+api.tokenmanagement=
+
+[mysql]
+username=
+password=
+`;
+
+const legacyOauthConfiguration = `
+[zoho]
+crm.iamurl=
+crm.clientid=1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+crm.clientsecret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+crm.redirecturl=https://XXXXXXXXXXXXXXXXXXXXXXXXX
+crm.refreshtoken=1000.XXXXXXXXXXXXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+`;
 
 describe('Instantiation', function() {
   describe('ZCRMRestClient.js', () => {
+    const confPath = path.normalize('./resources/configuration.properties');
+    const oauthPath = path.normalize('./resources/oauth_configuration.properties');
+    let confFileData, oauthFileData;
+
+    before(() => {
+      // We need to ensure legacy support. Do this, in part, but using legacy values in configuration files
+      confFileData = fs.readFileSync(confPath);
+      oauthFileData = fs.readFileSync(oauthPath);
+
+      fs.writeFileSync(confPath, legacyConfiguration);
+      fs.writeFileSync(oauthPath, legacyOauthConfiguration);
+    });
+
     it('should return a promise when initializing', async () => {
       const initializePromise = ZCRMRestClient.initialize();
       assert.strictEqual(initializePromise, Promise.resolve(initializePromise));
@@ -77,6 +107,10 @@ describe('Instantiation', function() {
     });
 
     it('should have correct values according to resource configurations', () => {
+      const PropertiesReader = require('properties-reader');
+      const config = PropertiesReader('resources/oauth_configuration.properties');
+      config.append('resources/configuration.properties');
+
       const functionValueMap = {
         // Required oauth values
         getRefreshToken: config.get('zoho.crm.refreshtoken'),
@@ -95,6 +129,12 @@ describe('Instantiation', function() {
       for (const func in functionValueMap) {
         assert.strictEqual(ZCRMRestClient[func](), functionValueMap[func]);
       }
+    });
+
+    after(() => {
+      // Replace configuration files
+      fs.writeFileSync(confPath, confFileData);
+      fs.writeFileSync(oauthPath, oauthFileData);
     });
   });
   describe('modules.js', () => {

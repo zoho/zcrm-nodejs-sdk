@@ -6,8 +6,73 @@ const path = require('path');
 
 const ZCRMRestClient = require('../lib/js/ZCRMRestClient.js');
 
+const configuration = `
+[crm]
+api.base_url=resourceConfig_base_url
+api.user_identifier=resourceConfig_user_identifier
+api.mysql_module=resourceConfig_mysql_module
+
+[mysql]
+username=resourceConfig_mysql_username
+password=resourceConfig_mysql_password
+`;
+
+const oauthConfiguration = `
+[zoho]
+crm.iamurl=resourceConfig_iamurl
+crm.client_id=resourceConfig_client_id
+crm.client_secret=resourceConfig_client_secret
+crm.redirect_url=resourceConfig_redirect_url
+crm.refresh_token=resourceConfig_refresh_token
+`;
+
 describe('Zoho CRM Rest Client Tests', function() {
-  describe('Instantiation', () => {
+  describe('Instantiation with resource configurations', () => {
+    const confPath = path.normalize('./resources/configuration.properties');
+    const oauthPath = path.normalize('./resources/oauth_configuration.properties');
+    let confFileData, oauthFileData;
+
+    before(() => {
+      confFileData = fs.readFileSync(confPath);
+      oauthFileData = fs.readFileSync(oauthPath);
+
+      fs.writeFileSync(confPath, configuration);
+      fs.writeFileSync(oauthPath, oauthConfiguration);
+    });
+
+    it('should initialize correctly with configuration file values', async () => {
+      await ZCRMRestClient.reset();
+      await ZCRMRestClient.initialize();
+
+      const PropertiesReader = require('properties-reader');
+      const config = PropertiesReader('resources/oauth_configuration.properties');
+      config.append('resources/configuration.properties');
+
+      const functionValueMap = {
+        getRefreshToken: config.get('zoho.crm.refresh_token'),
+        getClientId: config.get('zoho.crm.client_id'),
+        getClientSecret: config.get('zoho.crm.client_secret'),
+        getRedirectURL: config.get('zoho.crm.redirect_url'),
+        getUserIdentifier: config.get('crm.api.user_identifier'),
+        getMySQLModule: config.get('crm.api.mysql_module'),
+        getAPIURL: config.get('crm.api.base_url'),
+        getIAMUrl: config.get('zoho.crm.iamurl'),
+        getMySQLUserName: config.get('mysql.username'),
+        getMYSQLPassword: config.get('mysql.password')
+      };
+      for (const func in functionValueMap) {
+        assert.strictEqual(ZCRMRestClient[func](), functionValueMap[func]);
+      }
+    });
+
+    after(() => {
+      // Replace configuration files
+      fs.writeFileSync(confPath, confFileData);
+      fs.writeFileSync(oauthPath, oauthFileData);
+    });
+  });
+
+  describe('Instantiation without resource configurations', () => {
     const confPath = path.normalize('./resources/configuration.properties');
     const oauthPath = path.normalize('./resources/oauth_configuration.properties');
     let confFileData, oauthFileData;

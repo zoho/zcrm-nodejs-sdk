@@ -6,85 +6,119 @@ Node SDK is a wrapper for Zoho CRM APIs. Hence invoking a Zoho CRM API from your
 This SDK supports both single user as well as multi user authentication.
 
 ## Registering a Zoho Client
-
 Since Zoho CRM APIs are authenticated with OAuth2 standards, you should register your client app with Zoho. To register your app:
 
-	- Visit this page https://accounts.zoho.com/developerconsole.
+1. Visit this page: [https://accounts.zoho.com/developerconsole](https://accounts.zoho.com/developerconsole).
+2. Click on “Add Client ID”.
+3. Enter Client Name, Client Domain and Redirect URI.
+4. Select the Client Type as "Web based".
+5. Click “Create”.
+6. Your Client app would have been created and displayed by now.
+7. The newly registered app's Client ID and Client Secret can be found by clicking Options → Edit (Options is the three dot icon at the right corner).
 
-	- Click on “Add Client ID”.
+## Generating self-authorized grant and refresh token
+For self client apps, the self authorized grant token should be generated from the Zoho Developer Console (https://accounts.zoho.com/developerconsole)
 
-	- Enter Client Name, Client Domain and Redirect URI.
+1. Visit https://accounts.zoho.com/developerconsole
+2. Click Options → Self Client of the client for which you wish to authorize.
+3. Enter one or more (comma separated) valid Zoho CRM scopes that you wish to authorize in the “Scope” field and choose the time of expiry. Provide “aaaserver.profile.READ” scope along with Zoho CRM scopes. Valid scopes can be found [here](https://www.zoho.com/crm/help/developer/api/oauth-overview.html#plink5)
+3. Copy the grant token for backup.
+4. Generate refresh_token from grant token by making a POST request with the URL below https://accounts.zoho.com/oauth/v2/token?code={grant_token}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}&grant_type=authorization_code
+5.  Copy the refresh token for backup.
 
-	- Select the Client Type as "Web based".
+Please note that the generated grant token is valid only for the stipulated time you chose while generating it. Hence, the access and refresh tokens should be generated within that time.
 
-	- Click “Create”.
-
-	- Your Client app would have been created and displayed by now.
-
-	- The newly registered app's Client ID and Client Secret can be found by clicking Options → Edit (Options is the three dot icon at the right corner).
+Each time server is restarted, this function has to be called and both the configuration files should be populated with proper values before calling this function, else exception will be thrown.
 
 ## Installation of Node CRM SDK
-
 Node JS SDK will be installed and a package named 'zcrmsdk' will be created in the installation directory.
 
-> npm install zcrmsdk
-
+```
+npm install zcrmsdk
+```
 Once installed it can be used in the code as below,
 
-> let ZCRMRestClient = require('zcrmsdk')
-
-# API Usage
-
-## Configurations
-
-Your OAuth Client details should be given to the SDK as a property file. In the SDK, you need to configure a file named oauth_configuration.properties. Please place the respective values in that file. You can place it under resources/ package from where the SDK is used.
-
-zcrmsdk will try reading file from **'resources/oauth_configuration.properties'**
-
-Please fill the values for the following keys alone.
-Based on your domain(EU,CN), please change the value of crm.iamurl. Default value set as US domain.
-
-
 ```
-[zoho]
-crm.iamurl=                                                     
-crm.clientid=                                                    
-crm.clientsecret=                                         
-crm.redirecturl=
-crm.refreshtoken=                   
+const ZCRMRestClient = require('zcrmsdk');
 ```
 
-crm.clientid, crm.clientsecret and crm.redirecturl are your OAuth client’s configurations that you get after registering your Zoho client. If you are using a refresh token to generate authorization tokens you may also include it as crm.refreshtoken
-crm.iamurl is the accounts URL. It may be accounts.zoho.com or accounts.zoho.eu. If the crm.iamurl is not specified, by default the URL will be accounts.zoho.com.
+# Configuration
+There are 3 ways to configure the Zoho CRM SDK. Different methods can be used simultaneously, and higher priority methods will override lower priority methods. In order of priority these methods are:
+1. Declare values in a JS object passed to the `initialize` function
+2. Declare values in resource configuration files
+3. Declare values in environment variables
 
-In configuration.properties file:
+Any non-declared values will be assigned defaults, if available
 
+## Values
+The following values can be set as part of the configuration:
+
+### client_id
+`REQUIRED` The Client ID given to a registered zoho client app
+
+### client_secret
+`REQUIRED` The Client Secret given to a registered zoho client app
+
+### redirect_url
+`REQUIRED` The redirect url provided when registering a zoho client app. No requests will be made to this URL - it is used for additional security validation and much match the provided redirect url exactly
+
+### refresh_token
+`OPTIONAL` If using the Zoho CRM API in "Self Client" mode, a refresh token can be generated. This token lasts forever and can be used to generate access tokens whenever needed
+
+### iamurl
+`OPTIONAL. Default: accounts.zoho.com` The account endpoint to use for Zoho CRM operations. This endpoint is for US accounts, EU accounts can also be used by setting the value to `accounts.zoho.eu`
+
+### base_url
+`OPTIONAL. Default: www.zohoapis.com` The domain used when making requests to the zoho api. This domain defines what region to access, the default being the US region. Other available regions are:
+- Europe - `www.zohoapis.eu`
+- China - `www.zohoapis.com.cn`
+- India - `www.zohoapis.in`
+
+### user_identifier
+`OPTIONAL. Default: zcrm_default_user` A unique identifier that can be used to differentiate access tokens within the SDK
+
+### mysql_module
+`OPTIONAL. Default: ./mysql/mysql_util` The file location of the module used to store access tokens, relative to the `node_modules/zcrmsdk/lib/js/utils.js` file. The following values can also be used to activate different pre-made token storage mechanisms:
+- `local` - Tokens will be stored in-memory. This does mean that on server reset tokens will need to be regenerated. This method works best when a `refresh_token` is defined
+
+### mysql_username
+`OPTIONAL. Defailt: root` The mysql username to use when using the default (mysql) token storage module
+
+### mysql_password
+`OPTIONAL. Default: '' (The empty string)` The mysql password to use when using the default (mysql) token storage module
+
+## JS Object Configuration
+Before the Zoho CRM SDK can be used it must be initialized. This is done by calling the `initialize` function of the [ZCRMRestClient](lib/js/ZCRMRestClient.js). A JS object can optionally be passed to this initialization function that will apply values to the above variables. The keys of the provided JS object match the variable names listed above; the provided object should have the following form:
+``` JSON
+{
+  "client_id": "required {string}",
+  "client_secret": "required {string}",
+  "redirect_url": "required {string}",
+  "refresh_token": "optional {string}",
+  "iamurl": "optional {string}",
+  "base_url": "optional {string}",
+  "user_identifier": "optional {string}",
+  "mysql_module": "optional {string}",
+  "mysql_username": "optional {string}",
+  "mysql_password": "optional {string}"
+};
 ```
-[crm]
-api.url=                              
-api.user_identifier=                            
-api.tokenmanagement=      
 
-[mysql]
-username=
-password=                 
+## Resource File Configuration
+After the JS object values are added the SDK will check for two files in the [resources](resources) directory at the root of your project, `configuration.properties` and `oauth_configuration.properties`. These files can be used interchangeably, however it is recommended that secret values be added to the Oauth configuration file and non-secret values are added to the non-oauth configuration file to avoid mistakenly uploading API credentials to your project manager
 
+These `.properties` files follow the same format of `.ini` configuration files. See the [configuration](resources/configuration.properties) and [oauth_configuration](resources/oauth_configuration.properties) files for formatting examples. Historical aliases are also available for backwards compatibility and are defined in these example files. Note that if a variable is set along with its alias, the original variable (non-alias) will be used and the alias value will be ignored
+
+## Environment Variable Configuration
+If a value is not defined already, the system will check for environment variables to define values. All Envornment variables match the variable names listed above, with a `ZCRM__` tag preceding it. Examples:
 ```
-api.url is the URL used to call APIs. By default, the URL is www.zohoapis.com.
-api.user_identifier will be empty by default. For single user authentication, this key can be filled with the respective email id, so that all calls happens by using this user's authentication.
-api.tokenmanagement is given as a measure to manage and maintain tokens. If tokenmanagement is not provided, then sdk's default implementation(mysql) will be followed.
-username and password can be given here if you already have one created for your MySQL.
-The above keys specified in configuration.properties file are all optional.
+ZCRM__client_id = client_id
+ZCRM__base_url = base_url
+ZCRM__mysql_module = mysql_module
+etc...
+```
 
-user_identifier can be set in two ways .
-1.Mentioning it in api.user_identifier in configuration.properties file 
-2.Can be set via code using set setUserIdentifier.
-
-If user_identifier is not set via both the ways then default value 'zcrm_default_user' will be set by the sdk itself . 
-
-Example files can be found in the [resources](./resources) project directory
-
-## Token Storage Mechanism
+## Default Token Storage
 
 To use the default token storage provided by the SDK, the following are to be done:
 
@@ -94,41 +128,18 @@ Database with name **zohooauth** should be created and a table with below conf
 
 Once the configuration is set, storage and retrieval of tokens will be handled by the SDK.
 
-A "local" storage option is also available which will store tokens in-memory. To enable this storage mechanism, set the "tokenmanagement" config value to "local" as such:
-```
-[crm]
-api.tokenmanagement=local
-```
+## Custom Token Storage
+If the user wants to utilize their own token storage mechanism, they can create a token management module and add the relative path that module in the `mysql_module` configuration variable 
 
-If the user wants to utilize their own mechanism, they can mention it in configuration.properties by providing the respective module in api.tokenmanagement.
-
-This module should contain the below methods,
-	**saveOAuthTokens(token_obj)**
-	**updateOAuthTokens(token_obj)**
+This module should contain the below methods. All of these modules must return a Promise:
+- **saveOAuthTokens(token_obj)**
+- **updateOAuthTokens(token_obj)**
 		Irrespective of response, the next execution happens. So care should be taken by the user in handling their module.
-	**getOAuthTokens()**
+- **getOAuthTokens()**
 		The expected response for this method : JSON array containing json response with expirytime, refreshtoken and accesstoken fields.
 
-
-## Generating self-authorized grant and refresh token
-
-For self client apps, the self authorized grant token should be generated from the Zoho Developer Console (https://accounts.zoho.com/developerconsole)
-
-  1. Visit https://accounts.zoho.com/developerconsole
-  2. Click Options → Self Client of the client for which you wish to authorize.
-
-  3. Enter one or more (comma separated) valid Zoho CRM scopes that you wish to authorize in the “Scope” field and choose the time of expiry. Provide “aaaserver.profile.READ” scope along with Zoho CRM scopes. Valid scopes can be found [here](https://www.zoho.com/crm/help/developer/api/oauth-overview.html#plink5)
-  3. Copy the grant token for backup.
-  4. Generate refresh_token from grant token by making a POST request with the URL below https://accounts.zoho.com/oauth/v2/token?code={grant_token}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}&grant_type=authorization_code
-  5.  Copy the refresh token for backup.
-
-Please note that the generated grant token is valid only for the stipulated time you chose while generating it. Hence, the access and refresh tokens should be generated within that time.
-
-Each time server is restarted, this function has to be called and both the configuration files should be populated with proper values before calling this function, else exception will be thrown.
-
-**All functions return promises in zcrm node sdk.**
-
-
+# API Usage
+**Note: All functions return promises in zcrm node sdk.**
 ## Initialize 
 
 Below snippet has to be called before starting the app
@@ -262,6 +273,3 @@ For file download, the response will contain an extra field filename.
 
 ## Error Handling:
 All errors will be thrown explicitly and care should be taken in catching the same.
-
-
-
