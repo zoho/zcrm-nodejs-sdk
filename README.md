@@ -1,5 +1,5 @@
 ##Node JS SDK for Zoho CRM
-
+VERSION: 1.0.0
 ##Abstract
 
 Node SDK is a wrapper for Zoho CRM APIs. Hence invoking a Zoho CRM API from your Node application is just a function call which provide the most appropriate response.
@@ -38,54 +38,39 @@ Once installed it can be used in the code as below,
 
 ##Configurations
 
-Your OAuth Client details should be given to the SDK as a property file. In the SDK, you need to configure a file named oauth_configuration.properties. Please place the respective values in that file. You can place it under resources/ package from where the SDK is used.
+From version 1.0.0 onwards the configurations(OAuth Client details and Configuration details) can be sent only through a JSON object. 
 
+configJSON={
+  "client_id":"{client_id}",
+  "client_secret":"{client_secret}",
+  "redirect_uri":"{redirect_uri}",
+  "user_identifier":"{user_email_id}",
+  "persistence_handler":"{persistence preference}"
+  "token_file_path":"path/to/token",
+  "iam_url":"{IAM_URL}",
+  "base_url":"{api_URL}"
+  "version":"{api_version}",
+  "mysql_username" : "{mysql_username}",
+  "mysql_password" : "{mysql_password}"
+};
+crmclient.initialize(configJSON);
 
-zcrmsdk will try reading file from **'resources/oauth_configuration.properties'** 
+client_id,client_secret,redirect_uri is mandatory, 
 
+user identifier can be set either by passing it in the configJSON or by calling crmclient.setUserIdentifier(user_identifier);
 
-Please fill the values for the following keys alone.
-Based on your domain(EU,CN), please change the value of crm.iamurl. Default value set as US domain.
+persistence_handler key is optional and in the absence of the key,default inbuilt mysql db will be used for token storage for which the user can provide optional keys mysql_username(default:root) and mysql_password(default:"").
 
+Persistence:
+file persistence can be used by passing "file" to the persistence_handler key, token_file_path must contain the absolute path of the folder in which the oauthtokens.txt will be created or used for token related activities.
+in_memory persistence can be used by passing "in_memory" to the persistence_handler key, the tokens must be generated before every session in this mode.
+The user can also implement his own persistence. The path to the persistence file has to be passed to persistence_handler key. The implementation must contain saveOAuthTokens() and getOAuthTokens() method which must return promise. . getOauthTokens() must return the tokens as a JSONObject. the expected response would contain the following field:-
+accesstoken,refreshtoken,expirytime and useridentifier.
 
-```
-
-[zoho]
-crm.iamurl=                                                     
-crm.clientid=                                                    
-crm.clientsecret=                                         
-crm.redirecturl=                                   
-
-```
-
-crm.clientid, crm.clientsecret and crm.redirecturl are your OAuth client’s configurations that you get after registering your Zoho client.
-crm.iamurl is the accounts URL. It may be accounts.zoho.com or accounts.zoho.eu. If the crm.iamurl is not specified, by default the URL will be accounts.zoho.com.
-
-In configuration.properties file:
-
-```
-[crm]
-api.url=                              
-api.user_identifier=                            
-api.tokenmanagement=      
-
-[mysql]
-username=
-password=                 
-
-```
-api.url is the URL used to call APIs. By default, the URL is www.zohoapis.com.
+base_url is the URL used to call APIs. By default, the URL is www.zohoapis.com.
+iam_url the URL for token related functions. By default, the URL is accounts.zoho.com
+version is the api version, By default, the version is v2.
 api.user_identifier will be empty by default. For single user authentication, this key can be filled with the respective email id, so that all calls happens by using this user's authentication.
-api.tokenmanagement is given as a measure to manage and maintain tokens. If tokenmanagement is not provided, then sdk's default implementation(mysql) will be followed.
-username and password can be given here if you already have one created for your MySQL.
-The above keys specified in configuration.properties file are all optional.
-
-user_identifier can be set in two ways .
-1.Mentioning it in api.user_identifier in configuration.properties file 
-2.Can be set via code using set setUserIdentifier.
-
-If user_identifier is not set via both the ways then default value 'zcrm_default_user' will be set by the sdk itself . 
-
 
 ##Token Storage Mechanism
 
@@ -96,15 +81,6 @@ To use the default token storage provided by the SDK, the following are to be do
 Database with name **zohooauth** should be created and a table with below configurations should be present in the database. Table, named **"oauthtokens"**, should have the columns **"useridentifier" (varchar) "accesstoken" (varchar), "refreshtoken" (varchar) and "expirytime" (bigint)**.
 
 Once the configuration is set, storage and retrieval of tokens will be handled by the SDK.
-If the user wants to utilize their own mechanism, they can mention it in configuration.properties by providing the respective module in api.tokenmanagement.
-
-This module should contain the below methods,
-	**saveOAuthTokens(token_obj)**
-	**updateOAuthTokens(token_obj)**
-		Irrespective of response, the next execution happens. So care should be taken by the user in handling their module.
-	**getOAuthTokens()**
-		The expected response for this method : JSON array containing json response with expirytime, refreshtoken and accesstoken fields.
-
 
 ##Generating self-authorized grant and refresh token
 
@@ -135,8 +111,20 @@ Below snippet has to be called before starting the app
 
 ```
 var ZCRMRestClient = require('zcrmsdk');
-
-ZCRMRestClient.initialize().then(function(){
+configJSON={
+  "client_id":"{client_id}",
+  "client_secret":"{client_secret}",
+  "redirect_uri":"{redirect_uri}",
+  "user_identifier":"{user_email_id}",
+  "persistence_handler":"{persistence preference}"
+  "token_file_path":"path/to/token",
+  "iam_url":"{IAM_URL}",
+  "base_url":"{api_URL}"
+  "version":"{api_version}",
+  "mysql_username" : "{mysql_username}",
+  "mysql_password" : "{mysql_password}"
+};
+ZCRMRestClient.initialize(configJSON).then(function(){
 
     ...
 
@@ -148,11 +136,11 @@ ZCRMRestClient.initialize().then(function(){
 
 ```
 
-ZCRMRestClient.generateAuthTokens(user_identifier,grant_token).then(function(auth_response){
+ZCRMRestClient.generate_access_token(grant_token).then(function(token){
 
-    console.log("access token :"+auth_response.access_token);
-    console.log("refresh token :"+auth_response.refresh_token);
-    console.log("expires in :"+auth_response.expires_in);
+    console.log("access token :"+token.accesstoken);
+    console.log("refresh token :"+token.refreshtoken);
+    console.log("expires in :"+token.expirytime);
 
 });
 
@@ -160,14 +148,13 @@ ZCRMRestClient.generateAuthTokens(user_identifier,grant_token).then(function(aut
 
 ##Generating access token from refresh token
 
-This will be handled by sdk itself if the access and refresh token is generated by sdk.Developer need not call this explicitly.
-
+If the token expires and refresh token is available in the token storage, then the sdk will refresh the token by itself, however if the user wishes to refresh the token and or generate access token through it , following method can be used
 ```
-ZCRMRestClient.generateAuthTokenfromRefreshToken(user_identifier,refresh_token).then(function(auth_response){
+ZCRMRestClient.generate_access_token_from_refresh_token(user_identifier,refresh_token).then(function(token){
 
-    console.log("access token :"+auth_response.access_token);
-    console.log("refresh token :"+auth_response.refresh_token);
-    console.log("expires in :"+auth_response.expires_in);
+    console.log("access token :"+token.accesstoken);
+    console.log("refresh token :"+token.refreshtoken);
+    console.log("expires in :"+token.expirytime);
 
 });
 
@@ -213,10 +200,15 @@ zcrmsdk
    API
      ORG
        get
+       getOrgTax
+       createOrgTax
+       updateOrgTax
+       deleteOrgTax
      MODULES
        get
-       post
-       put
+       create
+       update
+       upsert
        delete
        getAllDeletedRecords
        getRecycleBinRecords
@@ -235,10 +227,15 @@ zcrmsdk
        convert
      USERS
        get
+       create
+       delete
+       update
+       search
      ATTACHMENTS
-       uploadFile
-       deleteFile
-       downloadFile
+       getAttachment
+       uploadAttachment
+       deleteAttachment
+       downloadAttachment
        uploadLink
        uploadPhoto
        downloadPhoto
@@ -246,6 +243,35 @@ zcrmsdk
      FUNCTIONS
        executeFunctionsInGet
        executeFunctionsInPost
+       executeFunctionsInPut
+       executeFunctionsInDelete
+     NOTES
+       getNotes
+       addNotes
+       updateNotes
+       deleteNotes
+       getAttachment
+       uploadAttachment
+       deleteAttachment
+       downloadAttachment
+     RELATEDLISTRECORDS
+       getRelatedRecords
+       addRelation
+       removeRelation
+     TAGS
+       getTags 
+       getTagCount 
+       createTags
+       updateTags 
+       addTagsToMultipleRecords 
+       removeTagsFromMultipleRecords 
+       addTags 
+       removeTags
+       delete 
+       merge
+       update 
+       
+      
  ```
 
 
