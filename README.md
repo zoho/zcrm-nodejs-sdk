@@ -39,7 +39,7 @@ Once installed it can be used in the code as below,
 ##Configurations
 
 From version 1.0.0 onwards the configurations(OAuth Client details and Configuration details) can be sent only through a JSON object. 
-
+```
 configJSON={
   "client_id":"{client_id}",
   "client_secret":"{client_secret}",
@@ -54,6 +54,7 @@ configJSON={
   "mysql_password" : "{mysql_password}"
 };
 crmclient.initialize(configJSON);
+```
 
 client_id,client_secret,redirect_uri is mandatory, 
 
@@ -100,7 +101,7 @@ For self client apps, the self authorized grant token should be generated from t
 
 Please note that the generated grant token is valid only for the stipulated time you chose while generating it. Hence, the access and refresh tokens should be generated within that time.
 
-Each time server is restarted, this function has to be called and both the configuration files should be populated with proper values before calling this function, else exception will be thrown.
+Each time server is restarted, this function has to be called and both the configuration JSON should be populated with proper values before calling this function, else exception will be thrown.
 
 **All functions return promises in zcrm node sdk.**
 
