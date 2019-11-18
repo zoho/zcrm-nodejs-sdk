@@ -1,14 +1,14 @@
 {
   "name": "zcrmsdk",
-  "version": "0.0.14",
+  "version": "0.0.16",
   "description": "Node SDK for Zoho CRM",
   "main": "lib/js/ZCRMRestClient",
   "dependencies": {
     "fs": "0.0.1-security",
-    "mysql": "^2.15.0",
+    "mysql": "^2.17.1",
     "properties-reader": "0.0.16",
     "querystring": "^0.2.0",
-    "request": "^2.81.0"
+    "request": "^2.88.0"
   },
   "keywords": [
     "Node",
