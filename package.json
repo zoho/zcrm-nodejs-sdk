@@ -1,6 +1,6 @@
 {
   "name": "zcrmsdk",
-  "version": "0.0.17",
+  "version": "0.0.20",
   "description": "Node SDK for Zoho CRM",
   "main": "lib/js/ZCRMRestClient",
   "dependencies": {
