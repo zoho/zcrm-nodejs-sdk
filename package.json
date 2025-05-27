@@ -6,7 +6,7 @@
   "dependencies": {
     "fs": "0.0.1-security",
     "mysql": "^2.18.1",
-    "properties-reader": "0.0.16",
+    "properties-reader": "2.2.0",
     "querystring": "^0.2.0",
     "request": "^2.88.2"
   },
